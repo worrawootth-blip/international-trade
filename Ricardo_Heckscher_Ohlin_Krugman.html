@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ห้องทดลองทฤษฎีการค้าระหว่างประเทศ</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<style>
+  :root{
+    --primary:#2563eb; --primary-d:#1d4ed8; --bg:#f1f5f9; --card:#ffffff;
+    --text:#1e293b; --muted:#64748b; --line:#e2e8f0;
+    --ok:#16a34a; --warn:#d97706; --bad:#dc2626;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--text);line-height:1.65}
+  header{background:linear-gradient(135deg,#1e3a8a,#2563eb 55%,#0891b2);color:#fff;padding:34px 20px 28px;text-align:center}
+  header h1{margin:0 0 6px;font-size:1.9rem}
+  header p{margin:0;opacity:.9}
+  .topbar{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:18px}
+  nav.tabs{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;padding:18px 12px;position:sticky;top:0;background:rgba(241,245,249,.95);backdrop-filter:blur(6px);z-index:20;border-bottom:1px solid var(--line)}
+  .tab{border:2px solid var(--primary);background:#fff;color:var(--primary);padding:10px 18px;border-radius:999px;font:600 1rem 'Sarabun';cursor:pointer;transition:.2s}
+  .tab:hover{background:#eff6ff}
+  .tab.active{background:var(--primary);color:#fff;box-shadow:0 4px 14px rgba(37,99,235,.35)}
+  main{max-width:1280px;margin:0 auto;padding:20px 16px 60px}
+  .model{display:none;animation:fade .35s}
+  .model.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .card{background:var(--card);border-radius:16px;padding:22px 24px;margin-bottom:18px;box-shadow:0 2px 10px rgba(15,23,42,.06);border:1px solid var(--line)}
+  .card h2{margin-top:0;color:#1e3a8a}
+  .card h3{margin-top:0;color:#1e40af}
+  .theory ul{margin:6px 0 10px}
+  .formula{background:#f8fafc;border-left:4px solid var(--primary);padding:10px 14px;border-radius:8px;font-family:Consolas,monospace;font-size:.95rem;margin:10px 0;overflow-x:auto}
+  .group-title{font-weight:700;color:#334155;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px dashed var(--line)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px 16px}
+  .field label{display:block;font-size:.9rem;font-weight:600;color:#475569;margin-bottom:4px}
+  .field input{width:100%;padding:9px 12px;border:1.5px solid #cbd5e1;border-radius:10px;font:1rem 'Sarabun';transition:.2s}
+  .field input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+  .field input.invalid{border-color:var(--bad);background:#fef2f2}
+  .field small{color:var(--muted);font-size:.8rem}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+  .btn{border:none;border-radius:10px;padding:10px 18px;font:600 .98rem 'Sarabun';cursor:pointer;transition:.2s;display:inline-flex;align-items:center;gap:6px}
+  .btn:hover{transform:translateY(-1px);filter:brightness(1.05)}
+  .btn-primary{background:var(--primary);color:#fff}
+  .btn-warn{background:#f59e0b;color:#fff}
+  .btn-secondary{background:#0f766e;color:#fff}
+  .btn-secondary.on{background:#115e59;box-shadow:inset 0 2px 6px rgba(0,0,0,.25)}
+  .btn-danger{background:#ef4444;color:#fff}
+  .btn-sm{padding:6px 12px;font-size:.85rem;background:#e2e8f0;color:#1e293b}
+  .btn-sm.on{background:#1e40af;color:#fff}
+  .btn-dl{background:#16a34a;color:#fff}
+  .sample-desc{margin-top:10px;color:#92400e;font-weight:600}
+  .alert{padding:10px 14px;border-radius:10px;margin:8px 0}
+  .alert.bad{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+  .alert.warn{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+  .summary ul{margin:6px 0;padding-left:22px}
+  .summary li{margin:4px 0}
+  .table-card h3{font-size:1.08rem}
+  .table-scroll{overflow-x:auto}
+
+  /* ===== ตาราง (แก้ไขการจัดแนวหัวตารางกับข้อมูล) ===== */
+  table{width:100%;border-collapse:collapse;font-size:.93rem;min-width:620px}
+  th{background:#1e40af;color:#fff;padding:9px 12px;text-align:left;font-weight:600;line-height:1.35;vertical-align:bottom;min-width:90px}
+  td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+  th.num,td.num{text-align:right}
+  td.num{font-variant-numeric:tabular-nums}
+  td.nw{white-space:nowrap}
+  td.ctr{text-align:center;font-weight:600;background:#eef2ff !important}
+  td.txt{text-align:left}
+  th:first-child,td:first-child{text-align:left;min-width:210px}
+  tr:nth-child(even) td{background:#f8fafc}
+  tr:hover td{background:#eff6ff}
+  td.neg{color:var(--bad)}
+
+  .table-note{margin-top:12px;background:#f0f9ff;border:1px solid #bae6fd;padding:10px 14px;border-radius:10px;font-size:.93rem;color:#0c4a6e}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{border:1.5px solid #94a3b8;background:#fff;color:#475569;border-radius:999px;padding:6px 14px;font:600 .88rem 'Sarabun';cursor:pointer}
+  .chip.active{background:#1e40af;border-color:#1e40af;color:#fff}
+  .chip.all{border-style:dashed}
+  .charts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(520px,1fr));gap:18px}
+  @media(max-width:640px){.charts-grid{grid-template-columns:1fr}}
+  .chart-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+  .chart-head h4{margin:0;color:#1e3a8a}
+  .chart-btns{display:flex;gap:6px}
+  .chart-box{position:relative;height:380px}
+  .note{color:#475569;font-size:.9rem;margin:10px 0 0;background:#f8fafc;padding:8px 12px;border-radius:8px}
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120px);background:#0f172a;color:#fff;padding:12px 22px;border-radius:12px;transition:.35s;z-index:99;font-weight:600}
+  #toast.show{transform:translateX(-50%) translateY(0)}
+  footer{text-align:center;color:var(--muted);padding:20px;font-size:.88rem}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🌏 ห้องทดลองทฤษฎีการค้าระหว่างประเทศ</h1>
+  <p>Ricardo • Heckscher–Ohlin • New Trade Theory (Paul Krugman) — ทดลองป้อนตัวเลข วิเคราะห์ และดูผลเป็นตารางและกราฟ</p>
+  <div class="topbar">
+    <button class="btn btn-danger" id="btnReset">🔄 รีเซ็ตหน้า</button>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-model="ricardo">⚖️ David Ricardo</button>
+  <button class="tab" data-model="ho">🏭 Heckscher–Ohlin</button>
+  <button class="tab" data-model="krugman">🚗 New Trade Theory (Krugman)</button>
+</nav>
+
+<main id="app"></main>
+<div id="toast"></div>
+<footer>แบบจำลองเพื่อการศึกษา — ตัวเลขเป็นผลจากสมมติฐานอย่างง่ายของแต่ละทฤษฎี</footer>
+
+<script>
+/* ================== ตั้งค่า Chart.js ================== */
+Chart.register(ChartDataLabels);
+Chart.defaults.font.family = "'Sarabun', sans-serif";
+Chart.defaults.font.size = 13;
+Chart.register({ id:'whiteBg', beforeDraw(chart){
+  const {ctx,width,height}=chart; ctx.save();
+  ctx.globalCompositeOperation='destination-over'; ctx.fillStyle='#ffffff';
+  ctx.fillRect(0,0,width,height); ctx.restore();
+}});
+const COLORS=['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0891b2','#db2777','#65a30d'];
+
+/* ================== ฟังก์ชันช่วย ================== */
+function fmt(v,d=2){
+  if(typeof v!=='number') return v;
+  if(!isFinite(v)) return isNaN(v)?'-':(v>0?'∞':'-∞');
+  if(Math.abs(v)<1e-10) v=0;
+  return v.toLocaleString('en-US',{maximumFractionDigits:d});
+}
+const pct=(v,d=2)=> isFinite(v)? (v>0?'+':'')+fmt(v*100,d)+'%' : '-';
+const sh=(v)=> fmt(v*100,2)+'%';
+const chg=(a,b)=> Math.abs(a)<1e-12? NaN : (b-a)/Math.abs(a);
+const curve=(label,data,color,dash)=>({label,data,showLine:true,borderColor:color,backgroundColor:color,pointRadius:0,borderWidth:2.5,borderDash:dash||[],isCurve:true,fill:false,tension:0});
+const pt=(label,p,color,style='circle')=>({label,data:[p],pointRadius:8,pointHoverRadius:10,backgroundColor:color,borderColor:'#fff',borderWidth:2,pointStyle:style,showLine:false});
+const bar=(label,data,color)=>({label,data,backgroundColor:color,borderRadius:6});
+const xy=(xt,yt)=>({x:{type:'linear',beginAtZero:true,title:{display:true,text:xt}},y:{beginAtZero:true,title:{display:true,text:yt}}});
+const yt=(t)=>({y:{beginAtZero:true,title:{display:true,text:t}}});
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),2600);}
+
+/* ================== 1) RICARDO ================== */
+function computeRicardo(v){
+  const A=v.nameA,B=v.nameB,gX=v.goodX,gY=v.goodY, warnings=[];
+  const s=isNaN(v.share)?0.5:v.share/100;
+  const C=[{n:A,aX:v.aX,aY:v.aY,L:v.LA},{n:B,aX:v.bX,aY:v.bY,L:v.LB}];
+  C.forEach(c=>{c.maxX=c.L/c.aX;c.maxY=c.L/c.aY;c.oc=c.aX/c.aY;c.autX=s*c.maxX;c.autY=(1-s)*c.maxY;});
+  const [ca,cb]=C, lo=Math.min(ca.oc,cb.oc), hi=Math.max(ca.oc,cb.oc);
+  const hasCA=Math.abs(ca.oc-cb.oc)>1e-9*hi;
+  let p=NaN,ex=-1,E=0;
+  if(!hasCA){
+    warnings.push('ค่าเสียโอกาสของทั้งสองประเทศเท่ากัน → ไม่มีความได้เปรียบโดยเปรียบเทียบ จึงไม่เกิดประโยชน์จากการค้าตามทฤษฎีของ Ricardo');
+    C.forEach(c=>{c.pX=c.autX;c.pY=c.autY;c.cX=c.autX;c.cY=c.autY;c.nX=0;c.nY=0;});
+  }else{
+    ex=ca.oc<cb.oc?0:1; const im=1-ex; p=v.tot;
+    if(isNaN(p)) p=(lo+hi)/2;
+    else if(p<=lo||p>=hi){warnings.push(`อัตราการค้าที่กรอก (${fmt(p,4)}) อยู่นอกช่วง ${fmt(lo,4)} – ${fmt(hi,4)} จะมีประเทศหนึ่งไม่ได้ประโยชน์ ระบบจึงใช้ค่ากลาง ${fmt((lo+hi)/2,4)} แทน`);p=(lo+hi)/2;}
+    const e=C[ex],m=C[im],QX=e.maxX,QY=m.maxY;
+    E=Math.min(QX-e.autX,(QY-m.autY)/p);
+    Object.assign(e,{pX:QX,pY:0,nX:E,nY:-p*E,cX:QX-E,cY:p*E});
+    Object.assign(m,{pX:0,pY:QY,nX:-E,nY:p*E,cX:E,cY:QY-p*E});
+  }
+  const absAdv=(x,y)=>x<y?A:(x>y?B:'เท่ากัน');
+  const absX=absAdv(ca.aX,cb.aX), absY=absAdv(ca.aY,cb.aY);
+  const compX=hasCA?C[ex].n:'ไม่มี', compY=hasCA?C[1-ex].n:'ไม่มี';
+  const r1=cb.aX/ca.aX, r2=cb.aY/ca.aY, wLo=Math.min(r1,r2), wHi=Math.max(r1,r2);
+  const wr=hasCA?(ex===0? p*cb.aY/ca.aX : cb.aX/(p*ca.aY)):NaN;
+  const wb={X:ca.autX+cb.autX,Y:ca.autY+cb.autY}, wa={X:ca.pX+cb.pX,Y:ca.pY+cb.pY};
+
+  const summary=`<ul>
+    <li><b>ความได้เปรียบโดยสมบูรณ์:</b> ${gX} → <b>${absX}</b> | ${gY} → <b>${absY}</b></li>
+    <li><b>ความได้เปรียบโดยเปรียบเทียบ:</b> ${hasCA?`<b>${C[ex].n}</b> ควรผลิต ${gX} (ค่าเสียโอกาส ${fmt(C[ex].oc,4)} ${gY}) และ <b>${C[1-ex].n}</b> ควรผลิต ${gY}`:'ไม่มี'}</li>
+    ${hasCA?`<li><b>อัตราการค้า (ToT):</b> ${gX} 1 หน่วย แลกได้ ${fmt(p,4)} ${gY} (ช่วงที่ทั้งคู่ได้ประโยชน์คือ ${fmt(lo,4)} – ${fmt(hi,4)})</li>
+    <li><b>ปริมาณการค้า:</b> ${C[ex].n} ส่งออก ${gX} ${fmt(E)} หน่วย และนำเข้า ${gY} ${fmt(p*E)} หน่วย</li>
+    <li><b>ผลผลิตโลก:</b> ${gX} เปลี่ยน ${pct(chg(wb.X,wa.X))}, ${gY} เปลี่ยน ${pct(chg(wb.Y,wa.Y))} เมื่อแต่ละประเทศผลิตเฉพาะสินค้าที่ตนได้เปรียบ</li>
+    <li><b>ข้อสรุป:</b> แม้ประเทศหนึ่งจะได้เปรียบโดยสมบูรณ์ทั้งสองสินค้า ทั้งสองประเทศก็ยังได้ประโยชน์จากการค้า ถ้าค่าเสียโอกาสต่างกัน</li>`:''}
+  </ul>`;
+
+  const tables=[
+  {title:'ตารางที่ 1: เทคโนโลยีการผลิตและผลิตภาพแรงงาน',headers:['ตัวชี้วัด',A,B,'ผู้ได้เปรียบ / หมายเหตุ'],dec:4,rows:[
+    [`ชั่วโมงแรงงานต่อ 1 หน่วย ${gX} (a<sub>LX</sub>)`,ca.aX,cb.aX,`ได้เปรียบโดยสมบูรณ์: <b>${absX}</b>`],
+    [`ชั่วโมงแรงงานต่อ 1 หน่วย ${gY} (a<sub>LY</sub>)`,ca.aY,cb.aY,`ได้เปรียบโดยสมบูรณ์: <b>${absY}</b>`],
+    [`ผลิตภาพแรงงาน ${gX} (หน่วย/ชม.)`,1/ca.aX,1/cb.aX,`${A} มีผลิตภาพ ${fmt(r1,3)} เท่าของ ${B}`],
+    [`ผลิตภาพแรงงาน ${gY} (หน่วย/ชม.)`,1/ca.aY,1/cb.aY,`${A} มีผลิตภาพ ${fmt(r2,3)} เท่าของ ${B}`],
+    ['แรงงานทั้งหมด (ชั่วโมง)',ca.L,cb.L,''],
+    [`ผลิต ${gX} ได้สูงสุด (L/a<sub>LX</sub>)`,ca.maxX,cb.maxX,'จุดตัดแกนนอนของ PPF'],
+    [`ผลิต ${gY} ได้สูงสุด (L/a<sub>LY</sub>)`,ca.maxY,cb.maxY,'จุดตัดแกนตั้งของ PPF'],
+    ['ความชันของ PPF (−a<sub>LX</sub>/a<sub>LY</sub>)',-ca.oc,-cb.oc,'PPF เป็นเส้นตรง เพราะต้นทุนค่าเสียโอกาสคงที่']],
+   note:`<b>ความได้เปรียบโดยสมบูรณ์ (Absolute Advantage)</b> ดูจากจำนวนชั่วโมงแรงงานที่ต้องใช้ ประเทศที่ใช้น้อยกว่าคือผู้ได้เปรียบ ส่วนผลิตภาพแรงงาน (1/a) คือจำนวนหน่วยที่ผลิตได้ต่อชั่วโมง Ricardo ชี้ว่าการได้เปรียบโดยสมบูรณ์<u>ไม่ใช่</u>เงื่อนไขที่จำเป็นต่อการค้า สิ่งที่สำคัญคือค่าเสียโอกาส (ตารางที่ 2)`},
+  {title:'ตารางที่ 2: ค่าเสียโอกาส ความได้เปรียบโดยเปรียบเทียบ และอัตราการค้า',headers:['ตัวชี้วัด',A,B,'การตีความ'],dec:4,rows:[
+    [`ค่าเสียโอกาสของ ${gX} 1 หน่วย (หน่วย ${gY})`,ca.oc,cb.oc,`ต่ำกว่า = ได้เปรียบโดยเปรียบเทียบ → <b>${compX}</b>`],
+    [`ค่าเสียโอกาสของ ${gY} 1 หน่วย (หน่วย ${gX})`,1/ca.oc,1/cb.oc,`ต่ำกว่า = ได้เปรียบโดยเปรียบเทียบ → <b>${compY}</b>`],
+    [`ราคาเปรียบเทียบก่อนการค้า (P<sub>X</sub>/P<sub>Y</sub>)`,ca.oc,cb.oc,'ในแบบจำลอง Ricardo ราคาเปรียบเทียบเท่ากับค่าเสียโอกาส'],
+    ['สินค้าที่ควรผลิตเฉพาะ (Specialization)',hasCA?(ex===0?gX:gY):'-',hasCA?(ex===1?gX:gY):'-','ผลิตสินค้าที่มีค่าเสียโอกาสต่ำกว่า'],
+    ['ช่วงอัตราการค้าที่ทั้งคู่ได้ประโยชน์',{v:hasCA?`${fmt(lo,4)} – ${fmt(hi,4)}`:'-',span:2},`หน่วย ${gY} ต่อ ${gX} 1 หน่วย`],
+    ['อัตราการค้าที่ใช้ (Terms of Trade)',{v:hasCA?fmt(p,4):'-',span:2},hasCA?`1 ${gX} = ${fmt(p,4)} ${gY}`:''],
+    ['ค่าจ้างเปรียบเทียบ w<sub>A</sub>/w<sub>B</sub>',{v:hasCA?fmt(wr,4):'-',span:2},`ต้องอยู่ระหว่าง ${fmt(wLo,4)} – ${fmt(wHi,4)} (อัตราผลิตภาพเปรียบเทียบ)`]],
+   note:`<b>ค่าเสียโอกาส</b> = a<sub>LX</sub>/a<sub>LY</sub> คือจำนวน ${gY} ที่ต้องเสียไปเพื่อผลิต ${gX} เพิ่ม 1 หน่วย ประเทศที่มีค่าเสียโอกาสต่ำกว่าได้เปรียบโดยเปรียบเทียบในสินค้านั้น อัตราการค้าต้องอยู่ระหว่างค่าเสียโอกาสของสองประเทศ ทั้งคู่จึงจะได้ประโยชน์ ค่าจ้างเปรียบเทียบสะท้อนผลิตภาพ ประเทศที่ผลิตภาพสูงกว่าจะได้ค่าจ้างสูงกว่าแต่ยังแข่งขันได้ (3 แถวล่างเป็นค่าที่ใช้ร่วมกันของทั้งสองประเทศ จึงแสดงครอบทั้งสองคอลัมน์)`},
+  {title:'ตารางที่ 3: การผลิต การบริโภค และการค้า ก่อนและหลังการค้า',headers:['ประเทศ','สินค้า','ผลิตก่อนการค้า','บริโภคก่อนการค้า','ผลิตหลังการค้า','ส่งออก (+) / นำเข้า (−)','บริโภคหลังการค้า','เปลี่ยนแปลงการบริโภค','% เปลี่ยนแปลง'],rows:
+    C.flatMap(c=>[[c.n,gX,c.autX,c.autX,c.pX,c.nX,c.cX,c.cX-c.autX,pct(chg(c.autX,c.cX))],[c.n,gY,c.autY,c.autY,c.pY,c.nY,c.cY,c.cY-c.autY,pct(chg(c.autY,c.cY))]]),
+   note:`ก่อนการค้า สมมติให้แต่ละประเทศใช้แรงงาน ${fmt(s*100)}% ผลิต ${gX} และบริโภคเท่าที่ผลิตได้ หลังการค้า แต่ละประเทศผลิตเฉพาะสินค้าที่ได้เปรียบโดยเปรียบเทียบ (Complete Specialization) แล้วแลกเปลี่ยนตามอัตราการค้า ปริมาณการค้ากำหนดให้แต่ละประเทศบริโภคสินค้าที่ตนผลิตได้ไม่น้อยกว่าก่อนการค้า ค่าบวกในคอลัมน์ "เปลี่ยนแปลงการบริโภค" คือประโยชน์จากการค้า (Gains from Trade)`},
+  {title:'ตารางที่ 4: ผลผลิตรวมของโลก',headers:['สินค้า','ก่อนการค้า','หลังการค้า (ผลิตเฉพาะอย่าง)','ผลผลิตเพิ่มขึ้น','% เปลี่ยนแปลง'],rows:[
+    [gX,wb.X,wa.X,wa.X-wb.X,pct(chg(wb.X,wa.X))],[gY,wb.Y,wa.Y,wa.Y-wb.Y,pct(chg(wb.Y,wa.Y))]],
+   note:'เมื่อแต่ละประเทศใช้แรงงานกับสินค้าที่ตนมีค่าเสียโอกาสต่ำ ทรัพยากรของโลกถูกจัดสรรอย่างมีประสิทธิภาพขึ้น ผลผลิตรวมของโลกจึงเพิ่มขึ้นโดยไม่ต้องเพิ่มแรงงาน ผลผลิตที่เพิ่มขึ้นนี้คือที่มาของประโยชน์จากการค้า'}];
+
+  const ppf=(c,idx)=>{
+    const ds=[curve('PPF (ขีดความสามารถการผลิต)',[{x:0,y:c.maxY},{x:c.maxX,y:0}],COLORS[idx])];
+    if(hasCA){
+      const isEx=idx===ex;
+      ds.push(curve('CPF (ความเป็นไปได้ในการบริโภคหลังการค้า)',isEx?[{x:0,y:p*c.maxX},{x:c.maxX,y:0}]:[{x:0,y:c.maxY},{x:c.maxY/p,y:0}],COLORS[2],[6,4]));
+      ds.push(pt('จุดผลิตหลังการค้า',{x:c.pX,y:c.pY},COLORS[4],'rectRot'));
+      ds.push(pt('จุดบริโภคหลังการค้า',{x:c.cX,y:c.cY},COLORS[2],'triangle'));
+    }
+    ds.push(pt('จุดผลิต/บริโภคก่อนการค้า',{x:c.autX,y:c.autY},COLORS[3]));
+    return {title:`PPF และ CPF ของ ${c.n}`,type:'scatter',data:{datasets:ds},options:{scales:xy(gX,gY)},
+      note:`เส้นทึบคือ PPF ของ ${c.n} เส้นประคือเส้นบริโภคหลังการค้า ซึ่งอยู่นอก PPF แปลว่าหลังการค้าประเทศบริโภคได้มากกว่าที่ผลิตเองได้`};
+  };
+  const charts=[ppf(ca,0),ppf(cb,1),
+    {title:'ชั่วโมงแรงงานต่อหน่วยสินค้า',type:'bar',data:{labels:[gX,gY],datasets:[bar(A,[ca.aX,ca.aY],COLORS[0]),bar(B,[cb.aX,cb.aY],COLORS[1])]},options:{scales:yt('ชั่วโมงต่อหน่วย')},note:'แท่งที่ต่ำกว่าคือประเทศที่ได้เปรียบโดยสมบูรณ์ในสินค้านั้น'},
+    {title:`ค่าเสียโอกาสของ ${gX} เทียบกับอัตราการค้า`,type:'bar',data:{labels:[`ค่าเสียโอกาส ${A}`,'อัตราการค้า (ToT)',`ค่าเสียโอกาส ${B}`],datasets:[{label:`หน่วย ${gY} ต่อ ${gX} 1 หน่วย`,data:[ca.oc,hasCA?p:0,cb.oc],backgroundColor:[COLORS[0],COLORS[2],COLORS[1]],borderRadius:6}]},options:{scales:yt(`หน่วย ${gY}`)},note:'อัตราการค้า (สีเขียว) ต้องอยู่ระหว่างค่าเสียโอกาสของสองประเทศ ทั้งคู่จึงจะได้ประโยชน์'},
+    {title:'ผลผลิตโลก: ก่อนและหลังการค้า',type:'bar',data:{labels:[gX,gY],datasets:[bar('ก่อนการค้า',[wb.X,wb.Y],'#94a3b8'),bar('หลังการค้า',[wa.X,wa.Y],COLORS[2])]},options:{scales:yt('หน่วย')},note:'การผลิตเฉพาะอย่างตามความได้เปรียบโดยเปรียบเทียบทำให้ผลผลิตรวมของโลกเพิ่มขึ้น'},
+    {title:'การบริโภคก่อนและหลังการค้า',type:'bar',data:{labels:[`${A}-${gX}`,`${A}-${gY}`,`${B}-${gX}`,`${B}-${gY}`],datasets:[bar('ก่อนการค้า',[ca.autX,ca.autY,cb.autX,cb.autY],'#94a3b8'),bar('หลังการค้า',[ca.cX,ca.cY,cb.cX,cb.cY],COLORS[0])]},options:{scales:yt('หน่วย')},note:'แท่งสีน้ำเงินที่สูงกว่าสีเทาแสดงประโยชน์จากการค้าที่ผู้บริโภคได้รับ'}];
+  return {summary,tables,charts,warnings};
+}
+
+/* ================== 2) HECKSCHER–OHLIN ================== */
+function computeHO(v){
+  const A=v.nameA,B=v.nameB,gX=v.goodX,gY=v.goodY,{aLX,aKX,aLY,aKY,pX,pY}=v, warnings=[];
+  const dp=isNaN(v.dpX)?10:v.dpX;
+  const D=aLX*aKY-aLY*aKX;
+  if(Math.abs(D)<1e-12) throw new Error('สินค้าทั้งสองใช้สัดส่วนทุนต่อแรงงาน (K/L) เท่ากัน จึงวิเคราะห์ตามแบบจำลอง H-O ไม่ได้ กรุณาปรับค่าความเข้มข้นของปัจจัย');
+  const kX=aKX/aLX,kY=aKY/aLY,capIsY=kY>kX,gCap=capIsY?gY:gX,gLab=capIsY?gX:gY;
+  const C=[{n:A,L:v.LA,K:v.KA},{n:B,L:v.LB,K:v.KB}];
+  C.forEach(c=>{
+    c.k=c.K/c.L; c.Xmax=Math.min(c.L/aLX,c.K/aKX); c.Ymax=Math.min(c.L/aLY,c.K/aKY);
+    const Xs=(c.L*aKY-aLY*c.K)/D, Ys=(aLX*c.K-aKX*c.L)/D;
+    c.inCone=Xs>-1e-9&&Ys>-1e-9;
+    const verts=[{x:0,y:c.Ymax,t:`ผลิตเฉพาะ ${gY}`},{x:c.Xmax,y:0,t:`ผลิตเฉพาะ ${gX}`}];
+    if(c.inCone) verts.push({x:Math.max(Xs,0),y:Math.max(Ys,0),t:'ผลิตทั้งสองสินค้า ใช้ปัจจัยเต็มที่'});
+    let best=verts[0]; verts.forEach(q=>{if(pX*q.x+pY*q.y>pX*best.x+pY*best.y+1e-9) best=q;});
+    c.X=best.x;c.Y=best.y;c.mode=best.t;
+    if(!c.inCone) warnings.push(`${c.n} มี K/L = ${fmt(c.k,3)} อยู่นอกช่วงความเข้มข้นของสินค้า (${fmt(Math.min(kX,kY),3)} – ${fmt(Math.max(kX,kY),3)}) จึงใช้ปัจจัยครบทั้งสองชนิดไม่ได้และต้องผลิตเฉพาะอย่าง ราคาปัจจัยจะไม่เท่ากันระหว่างประเทศ (FPE ไม่เกิด)`);
+    c.Lu=aLX*c.X+aLY*c.Y; c.Ku=aKX*c.X+aKY*c.Y; c.GDP=pX*c.X+pY*c.Y;
+    const pts=[],N=80;
+    for(let i=0;i<=N;i++){const x=c.Xmax*i/N;pts.push({x,y:Math.max(0,Math.min((c.L-aLX*x)/aLY,(c.K-aKX*x)/aKY))});}
+    if(c.inCone) pts.push({x:Xs,y:Ys}); pts.sort((a,b)=>a.x-b.x); c.ppf=pts;
+  });
+  const Lw=C[0].L+C[1].L,Kw=C[0].K+C[1].K,Xw=C[0].X+C[1].X,Yw=C[0].Y+C[1].Y,Gw=C[0].GDP+C[1].GDP;
+  C.forEach(c=>{c.s=c.GDP/Gw;c.cX=c.s*Xw;c.cY=c.s*Yw;c.nX=c.X-c.cX;c.nY=c.Y-c.cY;
+    c.FL=aLX*c.nX+aLY*c.nY;c.FK=aKX*c.nX+aKY*c.nY;c.hL=c.Lu-c.s*(C[0].Lu+C[1].Lu);c.hK=c.Ku-c.s*(C[0].Ku+C[1].Ku);});
+  const fp=(px,py)=>({w:(px*aKY-aKX*py)/D,r:(aLX*py-px*aLY)/D});
+  const pX2=pX*(1+dp/100),f0=fp(pX,pY),f1=fp(pX2,pY);
+  if(f0.w<=0||f0.r<=0) warnings.push('ที่ราคาสินค้าโลกนี้ ค่าจ้างหรือค่าเช่าทุนคำนวณได้ไม่เป็นบวก แปลว่าราคาอยู่นอกช่วงที่ทั้งสองสินค้าจะมีกำไรเป็นศูนย์พร้อมกัน ควรปรับราคาสินค้า');
+  if(f1.w<=0||f1.r<=0) warnings.push('หลังราคาเปลี่ยน ราคาปัจจัยบางตัวติดลบ แปลว่าการเปลี่ยนแปลงราคามากเกินไปจนเกิดการผลิตเฉพาะอย่าง ควรลดขนาดการเปลี่ยนแปลงราคา');
+  const capAb=C[0].k>C[1].k?0:(C[0].k<C[1].k?1:-1);
+  if(capAb<0) warnings.push('ทั้งสองประเทศมีสัดส่วน K/L เท่ากัน ไม่มีความแตกต่างด้านปัจจัย จึงไม่มีเหตุให้ค้าขายตามทฤษฎี H-O');
+  const abund=i=>capAb<0?'เท่ากัน':(i===capAb?'อุดมด้วยทุน (Capital-abundant)':'อุดมด้วยแรงงาน (Labor-abundant)');
+  const isCapGood=g=>(g==='Y')===capIsY;
+  const tradeRow=(c,i,g)=>{const n=g==='X'?c.nX:c.nY;const dir=Math.abs(n)<1e-9?'ไม่ค้า':(n>0?'ส่งออก':'นำเข้า');
+    const predExp=capAb<0?null:((i===capAb)===isCapGood(g));const ok=predExp===null||dir==='ไม่ค้า'?'-':((n>0)===predExp?'✅ ตรง':'❌ ไม่ตรง');
+    return [c.n,g==='X'?gX:gY,g==='X'?c.X:c.Y,g==='X'?c.cX:c.cY,n,n*(g==='X'?pX:pY),dir,ok];};
+  const capC=capAb>=0?C[capAb]:null,labC=capAb>=0?C[1-capAb]:null;
+  const ssRows=[[`ราคา ${gX}`,pX,pX2],[`ราคา ${gY}`,pY,pY],['ค่าจ้างแรงงาน (w)',f0.w,f1.w],['ค่าเช่าทุน (r)',f0.r,f1.r],['w/r',f0.w/f0.r,f1.w/f1.r],
+    ['ค่าจ้างที่แท้จริง w/P<sub>X</sub>',f0.w/pX,f1.w/pX2],['ค่าจ้างที่แท้จริง w/P<sub>Y</sub>',f0.w/pY,f1.w/pY],['ผลตอบแทนทุนที่แท้จริง r/P<sub>X</sub>',f0.r/pX,f1.r/pX2],['ผลตอบแทนทุนที่แท้จริง r/P<sub>Y</sub>',f0.r/pY,f1.r/pY]].map(r=>[...r,pct(chg(r[1],r[2]))]);
+  const gainer=(f1.w-f0.w)/f0.w>(f1.r-f0.r)/f0.r?'แรงงาน':'เจ้าของทุน';
+
+  const summary=`<ul>
+   <li><b>ความเข้มข้นของปัจจัย:</b> ${gCap} ใช้ทุนเข้มข้น (K/L = ${fmt(Math.max(kX,kY),3)}) | ${gLab} ใช้แรงงานเข้มข้น (K/L = ${fmt(Math.min(kX,kY),3)})</li>
+   ${capAb>=0?`<li><b>ความอุดมสมบูรณ์ของปัจจัย:</b> ${capC.n} อุดมด้วยทุน (K/L = ${fmt(capC.k,3)}) | ${labC.n} อุดมด้วยแรงงาน (K/L = ${fmt(labC.k,3)})</li>
+   <li><b>คำทำนายตามทฤษฎีบท H-O:</b> ${capC.n} ส่งออก <b>${gCap}</b> และ ${labC.n} ส่งออก <b>${gLab}</b></li>`:''}
+   <li><b>ผลการจำลอง:</b> ${C.map(c=>`${c.n} ${c.nX>1e-9?'ส่งออก':'นำเข้า'} ${gX} ${fmt(Math.abs(c.nX))} หน่วย, ${c.nY>1e-9?'ส่งออก':'นำเข้า'} ${gY} ${fmt(Math.abs(c.nY))} หน่วย`).join(' | ')}</li>
+   <li><b>ราคาปัจจัย (FPE):</b> w = ${fmt(f0.w,3)}, r = ${fmt(f0.r,3)} ${C.every(c=>c.inCone)?'เท่ากันทั้งสองประเทศ เพราะใช้เทคโนโลยีเดียวกันและเผชิญราคาสินค้าเดียวกัน':'(ใช้ได้เฉพาะประเทศที่ผลิตทั้งสองสินค้า)'}</li>
+   <li><b>Stolper–Samuelson:</b> ราคา ${gX} เปลี่ยน ${pct(dp/100)} ทำให้ w เปลี่ยน ${pct(chg(f0.w,f1.w))} และ r เปลี่ยน ${pct(chg(f0.r,f1.r))} ผู้ได้ประโยชน์คือ <b>${gainer}</b> (Magnification Effect)</li>
+  </ul>`;
+
+  const tables=[
+  {title:'ตารางที่ 1: ปัจจัยการผลิตและความอุดมสมบูรณ์ของปัจจัย',headers:['ตัวชี้วัด',A,B,'โลก (รวม)'],dec:3,rows:[
+    ['แรงงาน (L)',C[0].L,C[1].L,Lw],['ทุน (K)',C[0].K,C[1].K,Kw],['สัดส่วนทุนต่อแรงงาน (K/L)',C[0].k,C[1].k,Kw/Lw],
+    ['ส่วนแบ่งแรงงานโลก',sh(C[0].L/Lw),sh(C[1].L/Lw),'100%'],['ส่วนแบ่งทุนโลก',sh(C[0].K/Kw),sh(C[1].K/Kw),'100%'],
+    ['GDP (P<sub>X</sub>·X + P<sub>Y</sub>·Y)',C[0].GDP,C[1].GDP,Gw],['ส่วนแบ่ง GDP โลก (s)',sh(C[0].s),sh(C[1].s),'100%'],
+    ['ประเภทความอุดมสมบูรณ์',abund(0),abund(1),''],
+    ['แรงงานที่ใช้ (อัตราการจ้างงาน)',`${fmt(C[0].Lu)} (${sh(C[0].Lu/C[0].L)})`,`${fmt(C[1].Lu)} (${sh(C[1].Lu/C[1].L)})`,''],
+    ['ทุนที่ใช้ (อัตราการใช้ทุน)',`${fmt(C[0].Ku)} (${sh(C[0].Ku/C[0].K)})`,`${fmt(C[1].Ku)} (${sh(C[1].Ku/C[1].K)})`,''],
+    ['รูปแบบการผลิตที่ให้มูลค่าสูงสุด',C[0].mode,C[1].mode,'']],
+   note:'ความอุดมสมบูรณ์ของปัจจัยเป็น<b>เรื่องเปรียบเทียบ</b> ประเทศที่มี K/L สูงกว่าถือว่าอุดมด้วยทุน แม้จำนวนทุนรวมจะน้อยกว่าก็ตาม ส่วนแบ่ง GDP (s) ใช้คำนวณการบริโภค เพราะสมมติว่าทุกประเทศมีรสนิยมเหมือนกัน (Identical Homothetic Preferences)'},
+  {title:'ตารางที่ 2: เทคโนโลยีการผลิตและความเข้มข้นของปัจจัย (ใช้เทคโนโลยีเดียวกันทุกประเทศ)',headers:['สินค้า','แรงงานต่อหน่วย (a<sub>L</sub>)','ทุนต่อหน่วย (a<sub>K</sub>)','ความเข้มข้น K/L','ประเภท','ราคาโลก','ต้นทุนต่อหน่วย (w·a<sub>L</sub> + r·a<sub>K</sub>)'],dec:3,rows:[
+    [gX,aLX,aKX,kX,capIsY?'ใช้แรงงานเข้มข้น':'ใช้ทุนเข้มข้น',pX,aLX*f0.w+aKX*f0.r],
+    [gY,aLY,aKY,kY,capIsY?'ใช้ทุนเข้มข้น':'ใช้แรงงานเข้มข้น',pY,aLY*f0.w+aKY*f0.r]],
+   note:'แบบจำลองนี้ใช้สัมประสิทธิ์การผลิตคงที่ (Leontief) สินค้าที่มี K/L สูงกว่าเป็นสินค้าใช้ทุนเข้มข้น ในตลาดแข่งขันสมบูรณ์ ต้นทุนต่อหน่วยจะเท่ากับราคา (กำไรเป็นศูนย์) ระบบใช้เงื่อนไขนี้แก้หาค่าจ้าง w และค่าเช่าทุน r'},
+  {title:'ตารางที่ 3: การผลิต การบริโภค และการค้า (ทดสอบทฤษฎีบท H-O)',headers:['ประเทศ','สินค้า','ผลิต','บริโภค','ส่งออกสุทธิ (หน่วย)','มูลค่าส่งออกสุทธิ','ทิศทาง','ตรงกับคำทำนาย H-O'],rows:[
+    tradeRow(C[0],0,'X'),tradeRow(C[0],0,'Y'),tradeRow(C[1],1,'X'),tradeRow(C[1],1,'Y')],
+   note:'ปริมาณผลิตคำนวณจากการใช้แรงงานและทุนเต็มที่ (จุดหักของ PPF) การบริโภค = ส่วนแบ่ง GDP × ผลผลิตโลก ส่งออกสุทธิ = ผลิต − บริโภค ค่าบวกคือส่งออก ค่าลบคือนำเข้า มูลค่าการค้าของแต่ละประเทศรวมกันเป็นศูนย์ (ดุลการค้าสมดุล) ทฤษฎีบท H-O ทำนายว่าประเทศจะส่งออกสินค้าที่ใช้ปัจจัยที่ตนมีมากอย่างเข้มข้น'},
+  {title:`ตารางที่ 4: ราคาปัจจัยและทฤษฎีบท Stolper–Samuelson (ราคา ${gX} เปลี่ยน ${pct(dp/100)})`,headers:['ตัวแปร','ก่อน','หลัง','% เปลี่ยนแปลง'],dec:4,rows:ssRows,
+   note:`<b>Stolper–Samuelson:</b> เมื่อราคาสินค้าใดสูงขึ้น ผลตอบแทนที่แท้จริงของปัจจัยที่สินค้านั้นใช้เข้มข้นจะเพิ่มขึ้น<u>มากกว่าสัดส่วน</u>การเพิ่มของราคา (Magnification Effect) และผลตอบแทนที่แท้จริงของอีกปัจจัยจะลดลง ในกรณีนี้ ${gX} ใช้${capIsY?'แรงงาน':'ทุน'}เข้มข้น ${capIsY?'ค่าจ้าง w':'ค่าเช่าทุน r'}จึงควรเพิ่มขึ้นมากกว่า ${pct(dp/100)} ทฤษฎีนี้อธิบายว่าการค้ามีทั้งผู้ได้และผู้เสียประโยชน์ภายในประเทศ`},
+  {title:'ตารางที่ 5: ปัจจัยแฝงในการค้า (Heckscher–Ohlin–Vanek)',headers:['ประเทศ','ปัจจัย','ปัจจัยแฝงในการส่งออกสุทธิ','ค่าทำนาย HOV (V − s·V<sub>w</sub>)','ผลต่าง','การตีความ'],rows:
+    C.flatMap(c=>[[c.n,'แรงงาน (L)',c.FL,c.hL,c.FL-c.hL,c.FL>0?'ส่งออกบริการแรงงานทางอ้อม':'นำเข้าบริการแรงงานทางอ้อม'],[c.n,'ทุน (K)',c.FK,c.hK,c.FK-c.hK,c.FK>0?'ส่งออกบริการทุนทางอ้อม':'นำเข้าบริการทุนทางอ้อม']]),
+   note:'ปัจจัยแฝง (Factor Content) = a<sub>L</sub>·ส่งออกสุทธิ ของแต่ละสินค้ารวมกัน แนวคิด HOV บอกว่าการค้าสินค้าคือการค้าปัจจัยการผลิตทางอ้อม ประเทศจะส่งออกปัจจัยที่ตนมีมากกว่าส่วนแบ่ง GDP ของตน ถ้าผลต่างเป็น 0 แปลว่าผลการจำลองตรงกับทฤษฎี (คำนวณจากปัจจัยที่ใช้จริง)'}];
+
+  const ppfDs=[]; C.forEach((c,i)=>{ppfDs.push(curve(`PPF ${c.n}`,c.ppf,COLORS[i]));ppfDs.push(pt(`จุดผลิต ${c.n}`,{x:c.X,y:c.Y},COLORS[i],'rectRot'));ppfDs.push(pt(`จุดบริโภค ${c.n}`,{x:c.cX,y:c.cY},COLORS[i],'triangle'));});
+  const charts=[
+    {title:'PPF ของทั้งสองประเทศ (มีจุดหักจากข้อจำกัดของปัจจัย)',type:'scatter',data:{datasets:ppfDs},options:{scales:xy(gX,gY)},note:`PPF ของประเทศที่อุดมด้วยทุนจะเอียงไปทาง ${gCap} รูปสี่เหลี่ยมข้าวหลามตัดคือจุดผลิต สามเหลี่ยมคือจุดบริโภค ระยะห่างระหว่างสองจุดคือปริมาณการค้า`},
+    {title:'ปริมาณปัจจัยการผลิตของแต่ละประเทศ',type:'bar',data:{labels:['แรงงาน (L)','ทุน (K)'],datasets:[bar(A,[C[0].L,C[0].K],COLORS[0]),bar(B,[C[1].L,C[1].K],COLORS[1])]},options:{scales:yt('หน่วยปัจจัย')},note:'เปรียบเทียบปริมาณแรงงานและทุนที่แต่ละประเทศมี'},
+    {title:'สัดส่วน K/L: ประเทศและสินค้า',type:'bar',data:{labels:[A,B,gX,gY],datasets:[{label:'K/L',data:[C[0].k,C[1].k,kX,kY],backgroundColor:[COLORS[0],COLORS[1],COLORS[3],COLORS[4]],borderRadius:6}]},options:{scales:yt('K/L')},note:'ประเทศที่ K/L สูงจะได้เปรียบในสินค้าที่ K/L สูง ถ้า K/L ของประเทศอยู่ระหว่าง K/L ของสองสินค้า ประเทศนั้นผลิตทั้งสองสินค้าได้'},
+    {title:'การผลิตเทียบกับการบริโภค',type:'bar',data:{labels:[`${A}-${gX}`,`${A}-${gY}`,`${B}-${gX}`,`${B}-${gY}`],datasets:[bar('ผลิต',[C[0].X,C[0].Y,C[1].X,C[1].Y],COLORS[5]),bar('บริโภค',[C[0].cX,C[0].cY,C[1].cX,C[1].cY],COLORS[3])]},options:{scales:yt('หน่วย')},note:'ผลิตมากกว่าบริโภคคือส่งออก บริโภคมากกว่าผลิตคือนำเข้า'},
+    {title:'ส่งออกสุทธิ (หน่วย)',type:'bar',data:{labels:[gX,gY],datasets:[bar(A,[C[0].nX,C[0].nY],COLORS[0]),bar(B,[C[1].nX,C[1].nY],COLORS[1])]},options:{scales:{y:{title:{display:true,text:'หน่วย'}}}},note:'ค่าบวก = ส่งออก ค่าลบ = นำเข้า ส่วนที่ประเทศหนึ่งส่งออกเท่ากับส่วนที่อีกประเทศนำเข้าพอดี'},
+    {title:'Stolper–Samuelson: % การเปลี่ยนแปลง',type:'bar',data:{labels:[`ราคา ${gX}`,`ราคา ${gY}`,'ค่าจ้าง w','ค่าเช่าทุน r'],datasets:[{label:'% เปลี่ยนแปลง',data:[dp,0,chg(f0.w,f1.w)*100,chg(f0.r,f1.r)*100],backgroundColor:[COLORS[3],'#94a3b8',COLORS[0],COLORS[1]],borderRadius:6}]},options:{scales:{y:{title:{display:true,text:'%'}}}},note:'การเปลี่ยนแปลงของราคาปัจจัยมากกว่าการเปลี่ยนแปลงของราคาสินค้า (Magnification Effect) ปัจจัยหนึ่งได้ประโยชน์ อีกปัจจัยเสียประโยชน์'}];
+  return {summary,tables,charts,warnings};
+}
+
+/* ================== 3) KRUGMAN ================== */
+function computeKrugman(v){
+  const A=v.nameA,B=v.nameB,ind=v.industry,{SA,SB,F,c,invb}=v, warnings=[];
+  const eq=S=>{const n=Math.sqrt(S*invb/F),P=c+invb/n,Q=S/n,AC=F/Q+c;return {S,n,P,Q,AC,mk:P-c,mkp:(P-c)/c,rev:P*Q,tc:F+c*Q};};
+  const S=SA+SB,a=eq(SA),b=eq(SB),w=eq(S);
+  [a,b].forEach((e,i)=>{if(e.n<1) warnings.push(`ตลาด ${i?B:A} เล็กเกินไป (n = ${fmt(e.n)} < 1) ไม่สามารถรองรับบริษัทได้แม้แต่ 1 ราย ก่อนเปิดการค้า`);});
+  const shA=SA/S,shB=SB/S,nAt=w.n*shA,nBt=w.n*shB;
+  const expA=nAt*w.Q*shB,impA=nBt*w.Q*shA,GL=(x,m)=>(x+m)>0?1-Math.abs(x-m)/(x+m):NaN;
+  const mults=[0.25,0.5,0.75,1,1.5,2,3,4],sens=mults.map(m=>eq(S*m));
+
+  const summary=`<ul>
+   <li><b>ก่อนการค้า:</b> ${A} มีผู้ผลิต ${fmt(a.n)} ราย ราคา ${fmt(a.P)} | ${B} มีผู้ผลิต ${fmt(b.n)} ราย ราคา ${fmt(b.P)}</li>
+   <li><b>หลังรวมตลาด:</b> มีผู้ผลิต ${fmt(w.n)} ราย ราคา ${fmt(w.P)} แต่ละบริษัทผลิต ${fmt(w.Q)} หน่วย</li>
+   <li><b>ผู้บริโภค ${A}:</b> สินค้ามีความหลากหลายเพิ่มขึ้น ${pct(chg(a.n,w.n))} และราคาเปลี่ยน ${pct(chg(a.P,w.P))}</li>
+   <li><b>ผู้บริโภค ${B}:</b> สินค้ามีความหลากหลายเพิ่มขึ้น ${pct(chg(b.n,w.n))} และราคาเปลี่ยน ${pct(chg(b.P,w.P))}</li>
+   <li><b>การค้าภายในอุตสาหกรรม:</b> ${A} ทั้งส่งออกและนำเข้า${ind} มูลค่าฝั่งละ ${fmt(expA*w.P)} ดัชนี Grubel–Lloyd = ${fmt(GL(expA,impA),3)}</li>
+   <li><b>ข้อสรุป:</b> การค้าเกิดขึ้นได้แม้ทั้งสองประเทศมีเทคโนโลยีและปัจจัยเหมือนกัน เพราะการประหยัดจากขนาด (Economies of Scale) และความต้องการสินค้าที่หลากหลาย</li>
+  </ul>`;
+
+  const row=(lbl,k)=>[lbl,a[k],b[k],w[k],pct(chg(a[k],w[k])),pct(chg(b[k],w[k]))];
+  const tables=[
+  {title:'ตารางที่ 1: ดุลยภาพตลาดแข่งขันผูกขาด ก่อนและหลังการค้า',headers:['ตัวชี้วัด',`${A} (ไม่มีการค้า)`,`${B} (ไม่มีการค้า)`,'ตลาดรวม (มีการค้า)',`Δ% เทียบ ${A}`,`Δ% เทียบ ${B}`],rows:[
+    row('ขนาดตลาด S (หน่วย)','S'),row('จำนวนบริษัท / ความหลากหลาย (n)','n'),row('ราคา (P)','P'),row('ผลผลิตต่อบริษัท (Q = S/n)','Q'),
+    row('ต้นทุนเฉลี่ย (AC = F/Q + c)','AC'),row('ส่วนเพิ่มราคา (P − c)','mk'),
+    ['อัตราส่วนเพิ่ม (P − c)/c',sh(a.mkp),sh(b.mkp),sh(w.mkp),pct(chg(a.mkp,w.mkp)),pct(chg(b.mkp,w.mkp))],
+    row('รายรับต่อบริษัท (P·Q)','rev'),['กำไรทางเศรษฐศาสตร์',0,0,0,'-','-']],
+   note:'ดุลยภาพเกิดที่จุดตัดของเส้น <b>CC</b> (P = AC = nF/S + c: ยิ่งมีบริษัทมาก แต่ละบริษัทขายได้น้อยลง ต้นทุนเฉลี่ยจึงสูงขึ้น) กับเส้น <b>PP</b> (P = c + 1/(bn): ยิ่งมีคู่แข่งมาก ราคายิ่งต่ำลง) ได้ n* = √(S/(bF)) เมื่อเปิดการค้า ตลาดใหญ่ขึ้น บริษัทแต่ละรายผลิตได้มากขึ้นและต้นทุนเฉลี่ยลดลง ผู้บริโภคจึงได้ทั้งราคาต่ำลงและสินค้าหลากหลายขึ้น กำไรเป็นศูนย์ในระยะยาวเพราะมีการเข้า-ออกตลาดอย่างเสรี'},
+  {title:'ตารางที่ 2: การค้าภายในอุตสาหกรรม (Intra-industry Trade)',headers:['ตัวชี้วัด',A,B],rows:[
+    ['จำนวนบริษัทที่ตั้งในประเทศ (สัดส่วนตามขนาดตลาด)',nAt,nBt],['ผลผลิตรวมในประเทศ (หน่วย)',nAt*w.Q,nBt*w.Q],
+    ['ขายในประเทศ (หน่วย)',nAt*w.Q*shA,nBt*w.Q*shB],['ส่งออก (หน่วย)',expA,impA],['นำเข้า (หน่วย)',impA,expA],
+    ['มูลค่าส่งออก',expA*w.P,impA*w.P],['มูลค่านำเข้า',impA*w.P,expA*w.P],['ดุลการค้าในอุตสาหกรรม',(expA-impA)*w.P,(impA-expA)*w.P],
+    ['ดัชนี Grubel–Lloyd',GL(expA,impA),GL(impA,expA)],['จำนวนแบบสินค้าที่ผู้บริโภคเลือกได้: ก่อน → หลัง',`${fmt(a.n)} → ${fmt(w.n)}`,`${fmt(b.n)} → ${fmt(w.n)}`]],
+   note:'แต่ละบริษัทผลิตสินค้าคนละแบบ (Differentiated Products) และขายให้ผู้บริโภคทั้งสองประเทศตามสัดส่วนขนาดตลาด แต่ละประเทศจึงทั้งส่งออกและนำเข้าสินค้าในอุตสาหกรรมเดียวกัน <b>ดัชนี Grubel–Lloyd</b> = 1 − |X − M|/(X + M) ถ้าเข้าใกล้ 1 แปลว่าเป็นการค้าภายในอุตสาหกรรมสูง ซึ่งพบมากในการค้าระหว่างประเทศที่มีลักษณะคล้ายกัน ทฤษฎีของ Ricardo และ H-O อธิบายปรากฏการณ์นี้ไม่ได้'},
+  {title:'ตารางที่ 3: การวิเคราะห์ความไวต่อขนาดตลาด',headers:['ขนาดตลาด (เท่าของตลาดรวม)','ขนาดตลาด S','จำนวนบริษัท n','ราคา P','ผลผลิตต่อบริษัท Q','ต้นทุนเฉลี่ย AC'],rows:
+    sens.map((e,i)=>[`${mults[i]}×`,e.S,e.n,e.P,e.Q,e.AC]),
+   note:'เมื่อตลาดใหญ่ขึ้น จำนวนบริษัทเพิ่มขึ้นตาม √S แต่ช้ากว่าการเพิ่มของตลาด ผลผลิตต่อบริษัทจึงสูงขึ้นและต้นทุนเฉลี่ยลดลง (Economies of Scale) ราคาลดลงเข้าใกล้ต้นทุนส่วนเพิ่ม c นี่คือเหตุผลที่การรวมตลาด เช่น AEC หรือ EU สร้างประโยชน์ได้'}];
+
+  const nMin=Math.max(0.2,Math.min(a.n,b.n)*0.35),nMax=w.n*1.8,N=60,ns=[...Array(N+1)].map((_,i)=>nMin+(nMax-nMin)*i/N);
+  const qs=[a.Q,b.Q,w.Q],qMin=Math.min(...qs)*0.4,qMax=Math.max(...qs)*1.8,QQ=[...Array(N+1)].map((_,i)=>qMin+(qMax-qMin)*i/N);
+  const charts=[
+    {title:'แผนภาพ CC–PP (ดุลยภาพจำนวนบริษัทและราคา)',type:'scatter',data:{datasets:[
+      curve('PP: P = c + 1/(bn)',ns.map(n=>({x:n,y:c+invb/n})),COLORS[1]),
+      curve(`CC ${A}`,ns.map(n=>({x:n,y:n*F/SA+c})),COLORS[0],[6,4]),curve(`CC ${B}`,ns.map(n=>({x:n,y:n*F/SB+c})),COLORS[5],[6,4]),
+      curve('CC ตลาดรวม',ns.map(n=>({x:n,y:n*F/S+c})),COLORS[2]),
+      pt(`ดุลยภาพ ${A}`,{x:a.n,y:a.P},COLORS[0]),pt(`ดุลยภาพ ${B}`,{x:b.n,y:b.P},COLORS[5]),pt('ดุลยภาพตลาดรวม',{x:w.n,y:w.P},COLORS[2],'rectRot')]},
+     options:{scales:xy('จำนวนบริษัท (n)','ราคา / ต้นทุนเฉลี่ย')},note:'การค้าทำให้เส้น CC แบนลง (ตลาดใหญ่ขึ้น) จุดดุลยภาพจึงเลื่อนลงไปทางขวาตามเส้น PP ได้บริษัทมากขึ้นและราคาต่ำลง'},
+    {title:'เส้นต้นทุนเฉลี่ยและการประหยัดจากขนาด',type:'scatter',data:{datasets:[
+      curve('AC = F/Q + c',QQ.map(q=>({x:q,y:F/q+c})),COLORS[4]),curve('MC = c',[{x:qMin,y:c},{x:qMax,y:c}],'#94a3b8',[4,4]),
+      pt(`${A} (ไม่มีการค้า)`,{x:a.Q,y:a.AC},COLORS[0]),pt(`${B} (ไม่มีการค้า)`,{x:b.Q,y:b.AC},COLORS[5]),pt('ตลาดรวม',{x:w.Q,y:w.AC},COLORS[2],'rectRot')]},
+     options:{scales:{x:{type:'linear',title:{display:true,text:'ผลผลิตต่อบริษัท (Q)'}},y:{title:{display:true,text:'ต้นทุนต่อหน่วย'}}}},note:'เมื่อเปิดการค้า แต่ละบริษัทผลิตมากขึ้นและเลื่อนลงตามเส้น AC ต้นทุนเฉลี่ยจึงลดลง'},
+    {title:'จำนวนบริษัท / ความหลากหลายของสินค้า',type:'bar',data:{labels:[`${A} (ปิด)`,`${B} (ปิด)`,'ตลาดรวม'],datasets:[{label:'จำนวนแบบสินค้า (n)',data:[a.n,b.n,w.n],backgroundColor:[COLORS[0],COLORS[5],COLORS[2]],borderRadius:6}]},options:{scales:yt('จำนวนบริษัท')},note:'ผู้บริโภคได้สินค้าหลากหลายขึ้น ซึ่งเป็นประโยชน์จากการค้าแบบใหม่ที่ทฤษฎีดั้งเดิมไม่ได้พิจารณา'},
+    {title:'ราคาเทียบกับต้นทุนส่วนเพิ่ม',type:'bar',data:{labels:[`${A} (ปิด)`,`${B} (ปิด)`,'ตลาดรวม'],datasets:[bar('ราคา P (= AC)',[a.P,b.P,w.P],COLORS[1]),bar('ต้นทุนส่วนเพิ่ม c',[c,c,c],'#94a3b8')]},options:{scales:yt('ราคา')},note:'ช่องว่างระหว่าง P กับ c คืออำนาจตลาด การแข่งขันที่เพิ่มขึ้นหลังเปิดการค้าทำให้ช่องว่างนี้แคบลง'},
+    {title:`มูลค่าการค้าภายในอุตสาหกรรม${ind}`,type:'bar',data:{labels:[A,B],datasets:[bar('มูลค่าส่งออก',[expA*w.P,impA*w.P],COLORS[2]),bar('มูลค่านำเข้า',[impA*w.P,expA*w.P],COLORS[3])]},options:{scales:yt('มูลค่า')},note:'ทั้งสองประเทศส่งออกและนำเข้าสินค้าประเภทเดียวกันพร้อมกัน (Two-way Trade)'},
+    {title:'ความไว: ขนาดตลาดกับจำนวนบริษัทและราคา',type:'line',data:{labels:sens.map(e=>fmt(e.S,0)),datasets:[
+      {label:'จำนวนบริษัท n',data:sens.map(e=>e.n),borderColor:COLORS[0],backgroundColor:COLORS[0],yAxisID:'y',tension:.3},
+      {label:'ราคา P',data:sens.map(e=>e.P),borderColor:COLORS[1],backgroundColor:COLORS[1],yAxisID:'y1',tension:.3}]},
+     options:{scales:{x:{title:{display:true,text:'ขนาดตลาด S'}},y:{position:'left',title:{display:true,text:'จำนวนบริษัท'}},y1:{position:'right',grid:{drawOnChartArea:false},title:{display:true,text:'ราคา'}}}},note:'ตลาดยิ่งใหญ่ จำนวนแบบสินค้ายิ่งมาก และราคายิ่งต่ำ'}];
+  return {summary,tables,charts,warnings};
+}
+
+/* ================== การตั้งค่าแบบจำลอง ================== */
+const MODELS={
+ ricardo:{icon:'⚖️',title:'ทฤษฎีความได้เปรียบโดยเปรียบเทียบ (David Ricardo, 1817)',compute:computeRicardo,
+  theory:`<p>Ricardo อธิบายว่าการค้าเกิดจาก<b>ความแตกต่างของผลิตภาพแรงงาน (เทคโนโลยี)</b> แต่ละประเทศควรผลิตเฉพาะสินค้าที่ตนมี<b>ค่าเสียโอกาสต่ำกว่า</b> แม้จะไม่ได้เปรียบโดยสมบูรณ์ก็ตาม</p>
+  <ul><li>2 ประเทศ 2 สินค้า มีปัจจัยการผลิตเดียวคือแรงงาน</li><li>ผลตอบแทนต่อขนาดคงที่ PPF เป็นเส้นตรง ตลาดแข่งขันสมบูรณ์ ไม่มีต้นทุนขนส่ง</li><li>แรงงานเคลื่อนย้ายภายในประเทศได้ แต่ไม่ข้ามประเทศ</li></ul>
+  <div class="formula">ค่าเสียโอกาสของ X = a<sub>LX</sub> / a<sub>LY</sub> &nbsp;|&nbsp; ช่วงอัตราการค้า: (a<sub>LX</sub>/a<sub>LY</sub>)<sub>A</sub> &lt; P<sub>X</sub>/P<sub>Y</sub> &lt; (a<sub>LX</sub>/a<sub>LY</sub>)<sub>B</sub></div>`,
+  fields:[
+   {id:'nameA',label:'ชื่อประเทศ A',type:'text',ph:'ประเทศ A',g:'ข้อมูลทั่วไป'},{id:'nameB',label:'ชื่อประเทศ B',type:'text',ph:'ประเทศ B',g:'ข้อมูลทั่วไป'},
+   {id:'goodX',label:'ชื่อสินค้า X',type:'text',ph:'สินค้า X',g:'ข้อมูลทั่วไป'},{id:'goodY',label:'ชื่อสินค้า Y',type:'text',ph:'สินค้า Y',g:'ข้อมูลทั่วไป'},
+   {id:'aX',label:'ชั่วโมงแรงงานต่อ 1 หน่วย X',ph:'เช่น 2',g:'ประเทศ A'},{id:'aY',label:'ชั่วโมงแรงงานต่อ 1 หน่วย Y',ph:'เช่น 8',g:'ประเทศ A'},{id:'LA',label:'แรงงานทั้งหมด (ชั่วโมง)',ph:'เช่น 800',g:'ประเทศ A'},
+   {id:'bX',label:'ชั่วโมงแรงงานต่อ 1 หน่วย X',ph:'เช่น 4',g:'ประเทศ B'},{id:'bY',label:'ชั่วโมงแรงงานต่อ 1 หน่วย Y',ph:'เช่น 4',g:'ประเทศ B'},{id:'LB',label:'แรงงานทั้งหมด (ชั่วโมง)',ph:'เช่น 600',g:'ประเทศ B'},
+   {id:'share',label:'สัดส่วนแรงงานผลิต X ก่อนการค้า (%)',ph:'ค่าเริ่มต้น 50',optional:true,zero:true,max:100,g:'ตัวเลือกเพิ่มเติม'},
+   {id:'tot',label:'อัตราการค้า (Y ต่อ X 1 หน่วย)',ph:'เว้นว่าง = ค่ากลาง',optional:true,g:'ตัวเลือกเพิ่มเติม',help:'ต้องอยู่ระหว่างค่าเสียโอกาสของสองประเทศ'}],
+  samples:[
+   {desc:'ไทย–ญี่ปุ่น (ข้าว / รถยนต์)',nameA:'ไทย',nameB:'ญี่ปุ่น',goodX:'ข้าว',goodY:'รถยนต์',aX:2,aY:8,LA:800,bX:4,bY:4,LB:600,share:50,tot:''},
+   {desc:'ตัวอย่างดั้งเดิมของ Ricardo: อังกฤษ–โปรตุเกส (ผ้า / ไวน์)',nameA:'อังกฤษ',nameB:'โปรตุเกส',goodX:'ผ้า',goodY:'ไวน์',aX:100,aY:120,LA:2200,bX:90,bY:80,LB:1700,share:50,tot:''},
+   {desc:'สหรัฐฯ ได้เปรียบโดยสมบูรณ์ทั้งสองสินค้า แต่ยังได้ประโยชน์จากการค้า',nameA:'สหรัฐฯ',nameB:'เวียดนาม',goodX:'ซอฟต์แวร์',goodY:'เสื้อผ้า',aX:2,aY:4,LA:1200,bX:12,bY:6,LB:1800,share:40,tot:1}]},
+ ho:{icon:'🏭',title:'ทฤษฎี Heckscher–Ohlin (ความอุดมสมบูรณ์ของปัจจัยการผลิต)',compute:computeHO,
+  theory:`<p>Heckscher และ Ohlin อธิบายว่าการค้าเกิดจาก<b>ความแตกต่างของปริมาณปัจจัยการผลิต</b> (แรงงานและทุน) แม้ทุกประเทศจะใช้เทคโนโลยีเดียวกัน ประเทศจะส่งออกสินค้าที่ใช้ปัจจัยที่ตนมีมากอย่างเข้มข้น</p>
+  <ul><li><b>ทฤษฎีบท H-O:</b> ประเทศอุดมด้วยทุนส่งออกสินค้าใช้ทุนเข้มข้น</li><li><b>Stolper–Samuelson:</b> ราคาสินค้าที่เพิ่มขึ้นทำให้ผลตอบแทนของปัจจัยที่สินค้านั้นใช้เข้มข้นเพิ่มขึ้นมากกว่าสัดส่วน</li><li><b>Factor Price Equalization:</b> การค้าทำให้ราคาปัจจัยระหว่างประเทศเท่ากัน</li><li>แบบจำลองนี้ใช้สัมประสิทธิ์การผลิตคงที่ (Leontief) เพื่อให้คำนวณได้ชัดเจน</li></ul>
+  <div class="formula">การจ้างงานเต็มที่: a<sub>LX</sub>X + a<sub>LY</sub>Y = L, a<sub>KX</sub>X + a<sub>KY</sub>Y = K &nbsp;|&nbsp; กำไรศูนย์: P<sub>i</sub> = a<sub>Li</sub>w + a<sub>Ki</sub>r</div>`,
+  fields:[
+   {id:'nameA',label:'ชื่อประเทศ A',type:'text',ph:'ประเทศ A',g:'ข้อมูลทั่วไป'},{id:'nameB',label:'ชื่อประเทศ B',type:'text',ph:'ประเทศ B',g:'ข้อมูลทั่วไป'},
+   {id:'goodX',label:'ชื่อสินค้า X',type:'text',ph:'สินค้า X',g:'ข้อมูลทั่วไป'},{id:'goodY',label:'ชื่อสินค้า Y',type:'text',ph:'สินค้า Y',g:'ข้อมูลทั่วไป'},
+   {id:'LA',label:'ประเทศ A: แรงงาน (L)',ph:'เช่น 1000',g:'ปัจจัยการผลิตของประเทศ'},{id:'KA',label:'ประเทศ A: ทุน (K)',ph:'เช่น 400',g:'ปัจจัยการผลิตของประเทศ'},
+   {id:'LB',label:'ประเทศ B: แรงงาน (L)',ph:'เช่น 400',g:'ปัจจัยการผลิตของประเทศ'},{id:'KB',label:'ประเทศ B: ทุน (K)',ph:'เช่น 700',g:'ปัจจัยการผลิตของประเทศ'},
+   {id:'aLX',label:'X: แรงงานต่อหน่วย (a_LX)',ph:'เช่น 2',g:'เทคโนโลยี (เหมือนกันทุกประเทศ)'},{id:'aKX',label:'X: ทุนต่อหน่วย (a_KX)',ph:'เช่น 0.5',g:'เทคโนโลยี (เหมือนกันทุกประเทศ)'},
+   {id:'aLY',label:'Y: แรงงานต่อหน่วย (a_LY)',ph:'เช่น 1',g:'เทคโนโลยี (เหมือนกันทุกประเทศ)'},{id:'aKY',label:'Y: ทุนต่อหน่วย (a_KY)',ph:'เช่น 2',g:'เทคโนโลยี (เหมือนกันทุกประเทศ)'},
+   {id:'pX',label:'ราคาโลกของ X',ph:'เช่น 10',g:'ราคาตลาดโลก'},{id:'pY',label:'ราคาโลกของ Y',ph:'เช่น 20',g:'ราคาตลาดโลก'},
+   {id:'dpX',label:'% เปลี่ยนแปลงราคา X (Stolper–Samuelson)',ph:'ค่าเริ่มต้น 10',optional:true,neg:true,min:-99,g:'ราคาตลาดโลก'}],
+  samples:[
+   {desc:'ไทย (แรงงานมาก) – ญี่ปุ่น (ทุนมาก)',nameA:'ไทย',nameB:'ญี่ปุ่น',goodX:'เสื้อผ้า',goodY:'เครื่องจักร',LA:1000,KA:400,LB:400,KB:700,aLX:2,aKX:0.5,aLY:1,aKY:2,pX:10,pY:20,dpX:10},
+   {desc:'จีน – เยอรมนี (ของเล่น / รถยนต์)',nameA:'จีน',nameB:'เยอรมนี',goodX:'ของเล่น',goodY:'รถยนต์',LA:3000,KA:1500,LB:800,KB:1600,aLX:3,aKX:1,aLY:1,aKY:3,pX:12,pY:15,dpX:15},
+   {desc:'กรณีประเทศอยู่นอกกรวย ต้องผลิตเฉพาะอย่าง (FPE ไม่เกิด)',nameA:'บังกลาเทศ',nameB:'เกาหลีใต้',goodX:'สิ่งทอ',goodY:'เซมิคอนดักเตอร์',LA:1000,KA:100,LB:500,KB:900,aLX:2,aKX:0.5,aLY:1,aKY:2,pX:10,pY:20,dpX:10}]},
+ krugman:{icon:'🚗',title:'ทฤษฎีการค้าใหม่ (New Trade Theory — Paul Krugman, 1979/1980)',compute:computeKrugman,
+  theory:`<p>Krugman (รางวัลโนเบล 2008) อธิบายว่าการค้าเกิดได้แม้ประเทศจะเหมือนกันทุกประการ เพราะ<b>การประหยัดจากขนาด (Economies of Scale)</b> และ<b>ความชอบสินค้าที่หลากหลาย</b> ภายใต้ตลาดแข่งขันผูกขาด (Monopolistic Competition)</p>
+  <ul><li>แต่ละบริษัทผลิตสินค้าที่แตกต่างกันเล็กน้อย มีต้นทุนคงที่ F และต้นทุนส่วนเพิ่ม c</li><li>การค้าทำให้ตลาดใหญ่ขึ้น แต่ละบริษัทผลิตมากขึ้น ต้นทุนเฉลี่ยลดลง สินค้าหลากหลายขึ้น ราคาลดลง</li><li>อธิบาย<b>การค้าภายในอุตสาหกรรม</b> เช่น ไทยทั้งส่งออกและนำเข้ารถยนต์</li></ul>
+  <div class="formula">CC: P = AC = n·F/S + c &nbsp;|&nbsp; PP: P = c + 1/(b·n) &nbsp;⇒&nbsp; n* = √(S / (b·F)), Q* = S/n*</div>`,
+  fields:[
+   {id:'nameA',label:'ชื่อประเทศ A',type:'text',ph:'ประเทศ A',g:'ข้อมูลทั่วไป'},{id:'nameB',label:'ชื่อประเทศ B',type:'text',ph:'ประเทศ B',g:'ข้อมูลทั่วไป'},{id:'industry',label:'ชื่ออุตสาหกรรม',type:'text',ph:'อุตสาหกรรม',g:'ข้อมูลทั่วไป'},
+   {id:'SA',label:'ขนาดตลาดประเทศ A (ยอดขายรวม, หน่วย)',ph:'เช่น 900000',g:'ขนาดตลาด'},{id:'SB',label:'ขนาดตลาดประเทศ B (ยอดขายรวม, หน่วย)',ph:'เช่น 1600000',g:'ขนาดตลาด'},
+   {id:'F',label:'ต้นทุนคงที่ต่อบริษัท (F)',ph:'เช่น 750000000',g:'ต้นทุนและอุปสงค์'},{id:'c',label:'ต้นทุนส่วนเพิ่ม (c)',ph:'เช่น 5000',g:'ต้นทุนและอุปสงค์'},
+   {id:'invb',label:'พารามิเตอร์อุปสงค์ 1/b',ph:'เช่น 30000',g:'ต้นทุนและอุปสงค์',help:'ยิ่งสูง ผู้บริโภคยิ่งอ่อนไหวต่อราคาน้อย บริษัทจึงตั้งราคาสูงกว่าต้นทุนได้มาก'}],
+  samples:[
+   {desc:'ตัวอย่างตามตำรา Krugman–Obstfeld: อุตสาหกรรมรถยนต์',nameA:'ไทย',nameB:'อินโดนีเซีย',industry:'รถยนต์',SA:900000,SB:1600000,F:750000000,c:5000,invb:30000},
+   {desc:'ประเทศเล็กรวมตลาดกับประเทศใหญ่',nameA:'สิงคโปร์',nameB:'จีน',industry:'สมาร์ทโฟน',SA:200000,SB:5000000,F:400000000,c:3000,invb:20000},
+   {desc:'สองประเทศขนาดใกล้เคียงกัน',nameA:'ไทย',nameB:'มาเลเซีย',industry:'เครื่องสำอาง',SA:3000000,SB:2000000,F:50000000,c:200,invb:500}]}
+};
+
+/* ================== สร้างหน้าและควบคุมการทำงาน ================== */
+const state={}, sampleIdx={ricardo:-1,ho:-1,krugman:-1};
+
+function buildSections(){
+  const app=document.getElementById('app');
+  Object.entries(MODELS).forEach(([m,cfg],k)=>{
+    const groups=[...new Set(cfg.fields.map(f=>f.g))];
+    const sec=document.createElement('section');
+    sec.id=`sec-${m}`; sec.className='model'+(k===0?' active':'');
+    sec.innerHTML=`
+      <div class="card theory"><h2>${cfg.icon} ${cfg.title}</h2>${cfg.theory}</div>
+      <div class="card"><h3>🧮 ป้อนข้อมูลปัจจัยในการวิเคราะห์</h3>
+        ${groups.map(g=>`<div class="group-title">${g}</div><div class="grid">${cfg.fields.filter(f=>f.g===g).map(f=>`
+          <div class="field"><label for="${m}-${f.id}">${f.label}${f.optional?' <small>(ไม่บังคับ)</small>':''}</label>
+          <input id="${m}-${f.id}" type="${f.type==='text'?'text':'number'}" ${f.type==='text'?'':'step="any"'} placeholder="${f.ph}">
+          ${f.help?`<small>${f.help}</small>`:''}</div>`).join('')}</div>`).join('')}
+        <div class="actions">
+          <button class="btn btn-warn" data-act="sample">🎲 ข้อมูลทดลอง</button>
+          <button class="btn btn-primary" data-act="process">⚙️ ประมวลผล</button>
+        </div>
+        <div class="sample-desc" id="${m}-sdesc"></div>
+      </div>
+      <div id="${m}-result" class="result" hidden></div>`;
+    sec.addEventListener('click',e=>handleClick(m,e));
+    app.appendChild(sec);
+  });
+}
+
+function handleClick(m,e){
+  const b=e.target.closest('button'); if(!b) return;
+  const act=b.dataset.act;
+  if(act==='sample') return loadSample(m);
+  if(act==='process') return processModel(m);
+  if(act==='tables'){const w=document.getElementById(`${m}-tables`);w.hidden=!w.hidden;b.classList.toggle('on',!w.hidden);b.innerHTML=w.hidden?'📋 แสดงตาราง':'📋 ซ่อนตาราง';if(!w.hidden)w.scrollIntoView({behavior:'smooth'});return;}
+  if(act==='charts'){const w=document.getElementById(`${m}-charts`);w.hidden=!w.hidden;b.classList.toggle('on',!w.hidden);b.innerHTML=w.hidden?'📈 แสดงกราฟ':'📈 ซ่อนกราฟ';
+    if(!w.hidden){if(!state[m].built) buildCharts(m); w.scrollIntoView({behavior:'smooth'});} return;}
+  if(b.dataset.chip!==undefined){
+    const chips=document.querySelectorAll(`#${m}-charts .chip[data-chip]`);
+    if(b.dataset.chip==='all'){chips.forEach(c=>{if(c.dataset.chip!=='all')c.classList.add('active');});state[m].res.charts.forEach((_,i)=>document.getElementById(`${m}-cc-${i}`).style.display='');return;}
+    const i=+b.dataset.chip,card=document.getElementById(`${m}-cc-${i}`),on=card.style.display==='none';
+    card.style.display=on?'':'none'; b.classList.toggle('active',on); return;
+  }
+  if(b.dataset.lbl!==undefined){const ch=state[m].charts[+b.dataset.lbl];ch.$showNums=!ch.$showNums;ch.update();
+    b.classList.toggle('on',ch.$showNums);b.innerHTML=ch.$showNums?'🙈 ซ่อนตัวเลข':'🔢 แสดงตัวเลข';return;}
+  if(b.dataset.dl!==undefined){const i=+b.dataset.dl,ch=state[m].charts[i];
+    const name=`${m}_กราฟ${i+1}_${state[m].res.charts[i].title}`.replace(/[\\/:*?"<>|\s]+/g,'_');
+    const a=document.createElement('a');a.href=ch.toBase64Image('image/png',1);a.download=name+'.png';document.body.appendChild(a);a.click();a.remove();toast('ดาวน์โหลดกราฟเป็น PNG แล้ว');}
+}
+
+function loadSample(m){
+  const cfg=MODELS[m]; sampleIdx[m]=(sampleIdx[m]+1)%cfg.samples.length; const s=cfg.samples[sampleIdx[m]];
+  cfg.fields.forEach(f=>{const el=document.getElementById(`${m}-${f.id}`);el.value=s[f.id]??'';el.classList.remove('invalid');});
+  document.getElementById(`${m}-sdesc`).textContent=`🎲 ข้อมูลทดลองชุดที่ ${sampleIdx[m]+1}/${cfg.samples.length}: ${s.desc} (กดอีกครั้งเพื่อเปลี่ยนชุด)`;
+  toast('โหลดข้อมูลทดลองแล้ว กด "ประมวลผล" ได้เลย');
+}
+
+function readInputs(m){
+  const v={},errs=[];
+  MODELS[m].fields.forEach(f=>{
+    const el=document.getElementById(`${m}-${f.id}`); el.classList.remove('invalid');
+    if(f.type==='text'){v[f.id]=el.value.trim()||f.ph;return;}
+    const raw=el.value.trim();
+    if(raw===''){if(f.optional){v[f.id]=NaN;return;} errs.push(`กรุณากรอก "${f.label}"`);el.classList.add('invalid');return;}
+    const n=Number(raw);
+    const bad=!isFinite(n)||(!f.neg&&!f.zero&&n<=0)||(f.zero&&n<0)||(f.max!==undefined&&n>f.max)||(f.min!==undefined&&n<f.min);
+    if(bad){errs.push(`"${f.label}" มีค่าไม่ถูกต้อง${f.neg?` (ต้องมากกว่า ${f.min})`:f.zero?' (ต้องอยู่ระหว่าง 0–'+f.max+')':' (ต้องมากกว่า 0)'}`);el.classList.add('invalid');return;}
+    v[f.id]=n;
+  });
+  return {v,errs};
+}
+
+function destroyCharts(m){ if(state[m]) state[m].charts.forEach(c=>c.destroy()); }
+
+function processModel(m){
+  const out=document.getElementById(`${m}-result`), {v,errs}=readInputs(m);
+  destroyCharts(m); delete state[m]; out.hidden=false;
+  if(errs.length){out.innerHTML=`<div class="card"><div class="alert bad"><b>ข้อมูลไม่ครบถ้วนหรือไม่ถูกต้อง:</b><ul>${errs.map(e=>`<li>${e}</li>`).join('')}</ul></div></div>`;out.scrollIntoView({behavior:'smooth'});return;}
+  let res; try{res=MODELS[m].compute(v);}catch(err){out.innerHTML=`<div class="card"><div class="alert bad">${err.message}</div></div>`;return;}
+  state[m]={res,charts:[],built:false};
+  out.innerHTML=`
+    <div class="card"><h3>📌 สรุปผลการวิเคราะห์</h3>
+      ${res.warnings.map(w=>`<div class="alert warn">⚠️ ${w}</div>`).join('')}
+      <div class="summary">${res.summary}</div>
+      <div class="actions"><button class="btn btn-secondary" data-act="tables">📋 แสดงตาราง</button><button class="btn btn-secondary" data-act="charts">📈 แสดงกราฟ</button></div>
+    </div>
+    <div id="${m}-tables" hidden>${res.tables.map(renderTable).join('')}</div>
+    <div id="${m}-charts" hidden>
+      <div class="card"><h3>📈 เลือกกราฟที่ต้องการแสดง</h3><div class="chips">
+        ${res.charts.map((c,i)=>`<button class="chip active" data-chip="${i}">${i+1}. ${c.title}</button>`).join('')}
+        <button class="chip all" data-chip="all">✔ แสดงทั้งหมด</button></div></div>
+      <div class="charts-grid">${res.charts.map((c,i)=>`
+        <div class="card" id="${m}-cc-${i}">
+          <div class="chart-head"><h4>${i+1}. ${c.title}</h4>
+            <div class="chart-btns"><button class="btn btn-sm" data-lbl="${i}">🔢 แสดงตัวเลข</button><button class="btn btn-sm btn-dl" data-dl="${i}">⬇️ PNG</button></div></div>
+          <div class="chart-box"><canvas id="${m}-cv-${i}"></canvas></div>
+          <p class="note">💡 ${c.note}</p></div>`).join('')}</div>
+    </div>`;
+  out.scrollIntoView({behavior:'smooth'}); toast('ประมวลผลเสร็จแล้ว');
+}
+
+/* ================== สร้างตาราง (แก้ไขการจัดแนวหัวตารางกับข้อมูล) ================== */
+const NUMLIKE=/^[\s\d,.+\-−–→%()∞×]+$/;
+const cellVal=c=>(c&&typeof c==='object')?c.v:c;
+const cellSpan=c=>(c&&typeof c==='object')?(c.span||1):1;
+const isNumLike=v=>typeof v==='number'||(typeof v==='string'&&v.trim()!==''&&NUMLIKE.test(v));
+
+function renderTable(t){
+  const d=t.dec??2, nCol=t.headers.length;
+
+  // ตรวจทีละคอลัมน์ว่าเป็นคอลัมน์ตัวเลขหรือข้อความ เพื่อจัดหัวตารางและข้อมูลให้ชิดด้านเดียวกัน
+  const colNum=t.headers.map((_,j)=>{
+    if(j===0) return false;
+    let num=0,txt=0;
+    t.rows.forEach(r=>{let pos=0;
+      r.forEach(c=>{const s=cellSpan(c);
+        if(pos===j&&s===1){const v=cellVal(c); if(v!==''&&v!=null){isNumLike(v)?num++:txt++;}}
+        pos+=s;});
+    });
+    return num>0&&num>=txt;
+  });
+
+  const renderRow=r=>{
+    let pos=0,html='';
+    r.forEach(c=>{
+      const span=cellSpan(c),v=cellVal(c);
+      let cls=span>1?'ctr':(colNum[pos]?'num':'txt');
+      if(isNumLike(v)) cls+=' nw';                      // ตัวเลขไม่ตัดบรรทัด
+      if(typeof v==='number'&&v<-1e-9) cls+=' neg';     // ค่าติดลบเป็นสีแดง
+      const txt=typeof v==='number'?fmt(v,d):(v??'');
+      html+=`<td class="${cls}"${span>1?` colspan="${span}"`:''}>${txt}</td>`;
+      pos+=span;
+    });
+    while(pos<nCol){html+='<td></td>';pos++;}   // เติมช่องว่างถ้าแถวสั้นกว่าหัวตาราง
+    return `<tr>${html}</tr>`;
+  };
+
+  return `<div class="card table-card"><h3>${t.title}</h3><div class="table-scroll"><table>
+    <thead><tr>${t.headers.map((h,j)=>`<th class="${colNum[j]?'num':''}">${h}</th>`).join('')}</tr></thead>
+    <tbody>${t.rows.map(renderRow).join('')}</tbody>
+  </table></div><div class="table-note">📝 <b>คำอธิบาย:</b> ${t.note}</div></div>`;
+}
+
+function buildCharts(m){
+  const st=state[m];
+  st.res.charts.forEach((c,i)=>{
+    const opts=Object.assign({},c.options||{});
+    opts.responsive=true; opts.maintainAspectRatio=false; opts.devicePixelRatio=2;
+    opts.layout={padding:{top:26,right:18,left:6}};
+    opts.plugins=Object.assign({legend:{position:'bottom',labels:{usePointStyle:true}}},opts.plugins||{});
+    opts.plugins.datalabels={
+      display:ctx=>!!ctx.chart.$showNums&&!ctx.dataset.isCurve,
+      formatter:val=>(val&&typeof val==='object')?`(${fmt(val.x)}, ${fmt(val.y)})`:fmt(val),
+      anchor:'end', align:ctx=>{const v=ctx.dataset.data[ctx.dataIndex];return(typeof v==='number'&&v<0)?'bottom':'top';},
+      offset:3, color:'#0f172a', font:{weight:'600',size:11}, clamp:true
+    };
+    const ch=new Chart(document.getElementById(`${m}-cv-${i}`),{type:c.type,data:c.data,options:opts});
+    ch.$showNums=false; st.charts.push(ch);
+  });
+  st.built=true;
+}
+
+function switchTab(m){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.model===m));
+  document.querySelectorAll('.model').forEach(s=>s.classList.toggle('active',s.id===`sec-${m}`));
+}
+
+function resetAll(){
+  if(!confirm('ต้องการรีเซ็ตหน้าและล้างข้อมูลทั้งหมดหรือไม่?')) return;
+  Object.keys(MODELS).forEach(m=>{
+    destroyCharts(m); delete state[m]; sampleIdx[m]=-1;
+    MODELS[m].fields.forEach(f=>{const el=document.getElementById(`${m}-${f.id}`);el.value='';el.classList.remove('invalid');});
+    const r=document.getElementById(`${m}-result`); r.innerHTML=''; r.hidden=true;
+    document.getElementById(`${m}-sdesc`).textContent='';
+  });
+  switchTab('ricardo'); window.scrollTo({top:0,behavior:'smooth'}); toast('รีเซ็ตหน้าเรียบร้อยแล้ว');
+}
+
+buildSections();
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>switchTab(t.dataset.model)));
+document.getElementById('btnReset').addEventListener('click',resetAll);
+</script>
+</body>
+</html>
